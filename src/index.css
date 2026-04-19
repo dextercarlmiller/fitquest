@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #040f04;
+    color: #e2e8f0;
+    font-family: system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer utilities {
+  .font-pixel {
+    font-family: 'Press Start 2P', cursive;
+  }
+
+  .glow-green {
+    box-shadow: 0 0 12px #4ade80, 0 0 24px rgba(74, 222, 128, 0.4);
+  }
+
+  .glow-green-sm {
+    box-shadow: 0 0 6px rgba(74, 222, 128, 0.6);
+  }
+
+  .card {
+    background-color: #0a1a0a;
+    border: 1px solid #1a3a1a;
+    border-radius: 0.75rem;
+  }
+
+  .btn-primary {
+    background-color: #4ade80;
+    color: #040f04;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.6rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-primary:hover {
+    background-color: #86efac;
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    color: #4ade80;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.6rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid #4ade80;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-secondary:hover {
+    background-color: rgba(74, 222, 128, 0.1);
+  }
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-80px) scale(0.9);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px #4ade80, 0 0 16px rgba(74, 222, 128, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px #4ade80, 0 0 40px rgba(74, 222, 128, 0.6);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes xpFill {
+  from { width: 0; }
+}
+
+.animate-float-up {
+  animation: floatUp 1.5s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.4s ease-out forwards;
+}
+
+.xp-bar-fill {
+  animation: xpFill 0.8s ease-out;
+}
+
+.zone-path {
+  position: relative;
+}
+
+.zone-path::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: repeating-linear-gradient(
+    to right,
+    #1a3a1a 0px,
+    #1a3a1a 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.page-container {
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100dvh;
+}
+
+.scrollable-content {
+  padding-bottom: 5rem;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #040f04;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a3a1a;
+  border-radius: 2px;
+}
