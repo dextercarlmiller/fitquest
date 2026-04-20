@@ -9,6 +9,7 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,14 +35,23 @@ export default function Signup() {
       return
     }
 
-    if (data.user) {
-      // Create initial profile row
-      await supabase.from('profiles').insert({
+    if (data.user && data.session) {
+      // Email confirmation is disabled — user is immediately signed in
+      const { error: profileError } = await supabase.from('profiles').insert({
         id: data.user.id,
         total_xp: 0,
         onboarding_complete: false,
       })
+      if (profileError) {
+        setError('Account created but profile setup failed. Please try signing in.')
+        setLoading(false)
+        return
+      }
       navigate('/onboarding')
+    } else if (data.user && !data.session) {
+      // Email confirmation is enabled — user must confirm before signing in
+      setEmailSent(true)
+      setLoading(false)
     }
   }
 
@@ -54,8 +64,25 @@ export default function Signup() {
         <p className="text-gray-400 text-sm mt-2">Begin your adventure</p>
       </div>
 
+      {/* Email confirmation notice */}
+      {emailSent && (
+        <div className="w-full max-w-sm">
+          <div className="card p-6 text-center space-y-4">
+            <div className="text-4xl">📬</div>
+            <h2 className="font-pixel text-green-400 text-xs">Check Your Email</h2>
+            <p className="text-gray-400 text-sm">
+              We sent a confirmation link to <span className="text-white">{email}</span>.
+              Click it to activate your account, then sign in.
+            </p>
+            <Link to="/login" className="btn-primary block w-full text-center">
+              Go to Login
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Form */}
-      <div className="w-full max-w-sm">
+      {!emailSent && <div className="w-full max-w-sm">
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
           <h2 className="font-pixel text-green-400 text-xs mb-4">Create Account</h2>
 
@@ -116,7 +143,7 @@ export default function Signup() {
             Log in
           </Link>
         </p>
-      </div>
+      </div>}
     </div>
   )
 }
