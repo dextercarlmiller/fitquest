@@ -33,7 +33,7 @@ export default function Login() {
       return
     }
 
-    navigate('/')
+    // Auth state change triggers the useEffect above to navigate at the right time
   }
 
   return (
