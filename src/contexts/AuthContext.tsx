@@ -63,7 +63,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Resolve initial session via a direct promise so loading always clears,
+    // even if the onAuthStateChange INITIAL_SESSION event is delayed or dropped.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        fetchProfile(session.user.id).finally(() => setLoading(false))
+      } else {
+        setLoading(false)
+      }
+    }).catch(() => setLoading(false))
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return
       setUser(session?.user ?? null)
       if (session?.user) {
         setLoading(true)
