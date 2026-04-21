@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { ProtectedRoute, OnboardingRoute } from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import AuthCallback from './pages/AuthCallback'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import DailyLog from './pages/DailyLog'
@@ -17,6 +18,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route
             path="/onboarding"
             element={

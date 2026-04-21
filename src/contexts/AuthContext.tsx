@@ -28,19 +28,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
 
     if (data) {
       setProfile(data)
+      return
+    }
+
+    // Profile missing (e.g. signup happened with email confirmation enabled).
+    // Create it now so onboarding can proceed. Use maybeSingle on the insert
+    // result and fall back to a fresh SELECT if a concurrent call beat us to it.
+    const { data: created } = await supabase
+      .from('profiles')
+      .insert({ id: userId, total_xp: 0, onboarding_complete: false })
+      .select()
+      .maybeSingle()
+
+    if (created) {
+      setProfile(created)
     } else {
-      // Profile missing (e.g. signup happened with email confirmation enabled)
-      // Create it now so onboarding can proceed
-      const { data: created } = await supabase
+      // INSERT was lost to a concurrent call (e.g. React StrictMode double-mount).
+      // Fetch the row that the other call created.
+      const { data: existing } = await supabase
         .from('profiles')
-        .insert({ id: userId, total_xp: 0, onboarding_complete: false })
-        .select()
-        .single()
-      setProfile(created ?? null)
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle()
+      setProfile(existing ?? null)
     }
   }
 
