@@ -29,7 +29,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select('*')
       .eq('id', userId)
       .single()
-    setProfile(data ?? null)
+
+    if (data) {
+      setProfile(data)
+    } else {
+      // Profile missing (e.g. signup happened with email confirmation enabled)
+      // Create it now so onboarding can proceed
+      const { data: created } = await supabase
+        .from('profiles')
+        .insert({ id: userId, total_xp: 0, onboarding_complete: false })
+        .select()
+        .single()
+      setProfile(created ?? null)
+    }
   }
 
   const refreshProfile = async () => {
@@ -37,21 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id).finally(() => setLoading(false))
       } else {
-        setLoading(false)
-      }
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
         setProfile(null)
+        setLoading(false)
       }
     })
 
