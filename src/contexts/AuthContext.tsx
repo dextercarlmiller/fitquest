@@ -63,16 +63,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    // Safety valve: if Supabase never responds (network hang), unblock the UI
+    // after 10 s so the user isn't permanently stuck on the loading screen.
+    const timeout = setTimeout(() => setLoading(false), 10_000)
+
     // Resolve initial session via a direct promise so loading always clears,
     // even if the onAuthStateChange INITIAL_SESSION event is delayed or dropped.
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timeout)
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id).finally(() => setLoading(false))
       } else {
         setLoading(false)
       }
-    }).catch(() => setLoading(false))
+    }).catch(() => {
+      clearTimeout(timeout)
+      setLoading(false)
+    })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION') return
@@ -86,7 +94,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   return (
