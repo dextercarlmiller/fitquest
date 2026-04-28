@@ -96,3 +96,38 @@ create policy "quest_completions: select own" on quest_completions
 
 create policy "quest_completions: insert own" on quest_completions
   for insert with check (auth.uid() = user_id);
+
+-- ─────────────────────────────────────────────
+-- AUTO-CREATE PROFILE ON SIGNUP
+-- ─────────────────────────────────────────────
+
+-- Runs as SECURITY DEFINER so it bypasses RLS and can always insert the row.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, total_xp, onboarding_complete)
+  values (new.id, 0, false)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- ─────────────────────────────────────────────
+-- BACKFILL: create profile rows for any existing
+-- auth.users that never got one (e.g. sign-ups
+-- that occurred before the trigger was added or
+-- before RLS policies were applied).
+-- ─────────────────────────────────────────────
+insert into public.profiles (id, total_xp, onboarding_complete)
+select id, 0, false
+from auth.users
+where id not in (select id from public.profiles)
+on conflict (id) do nothing;

@@ -16,7 +16,7 @@ export default function Login() {
   useEffect(() => {
     if (authLoading) return
     if (user) {
-      navigate(profile && !profile.onboarding_complete ? '/onboarding' : '/', { replace: true })
+      navigate(profile?.onboarding_complete ? '/' : '/onboarding', { replace: true })
     }
   }, [user, profile, authLoading, navigate])
 

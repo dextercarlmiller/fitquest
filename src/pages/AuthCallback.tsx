@@ -9,7 +9,7 @@ export default function AuthCallback() {
   useEffect(() => {
     if (loading) return
     if (user) {
-      navigate(profile && !profile.onboarding_complete ? '/onboarding' : '/', { replace: true })
+      navigate(profile?.onboarding_complete ? '/' : '/onboarding', { replace: true })
     } else {
       navigate('/login', { replace: true })
     }
