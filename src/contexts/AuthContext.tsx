@@ -24,38 +24,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .maybeSingle()
+
+    if (error) throw error
 
     if (data) {
       setProfile(data)
       return
     }
 
-    // Profile missing (e.g. signup happened with email confirmation enabled).
-    // Create it now so onboarding can proceed. Use maybeSingle on the insert
-    // result and fall back to a fresh SELECT if a concurrent call beat us to it.
-    const { data: created } = await supabase
+    // No profile row exists yet (e.g. signup with email confirmation enabled).
+    // Create it now so onboarding can proceed.
+    const { data: created, error: insertError } = await supabase
       .from('profiles')
       .insert({ id: userId, total_xp: 0, onboarding_complete: false })
       .select()
       .maybeSingle()
 
+    // Postgres unique-violation (23505) means a concurrent call already inserted
+    // the row (React StrictMode double-mount). Fetch what that call created.
+    if (insertError && insertError.code !== '23505') throw insertError
+
     if (created) {
       setProfile(created)
-    } else {
-      // INSERT was lost to a concurrent call (e.g. React StrictMode double-mount).
-      // Fetch the row that the other call created.
-      const { data: existing } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle()
-      setProfile(existing ?? null)
+      return
     }
+
+    const { data: existing, error: refetchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (refetchError) throw refetchError
+    setProfile(existing ?? null)
   }
 
   const refreshProfile = async () => {
@@ -73,7 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTimeout(timeout)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchProfile(session.user.id).finally(() => setLoading(false))
+        fetchProfile(session.user.id)
+          .catch(err => console.error('fetchProfile error:', err))
+          .finally(() => setLoading(false))
       } else {
         setLoading(false)
       }
@@ -87,7 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null)
       if (session?.user) {
         setLoading(true)
-        fetchProfile(session.user.id).finally(() => setLoading(false))
+        fetchProfile(session.user.id)
+          .catch(err => console.error('fetchProfile error:', err))
+          .finally(() => setLoading(false))
       } else {
         setProfile(null)
         setLoading(false)
