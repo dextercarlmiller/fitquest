@@ -1,7 +1,7 @@
--- FitQuest Database Schema
--- Run this in the Supabase SQL Editor to set up your database
+-- ─────────────────────────────────────────────
+-- EXTENSIONS
+-- ─────────────────────────────────────────────
 
--- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
 -- ─────────────────────────────────────────────
@@ -64,36 +64,46 @@ alter table achievements enable row level security;
 alter table quest_completions enable row level security;
 
 -- Profiles policies
+drop policy if exists "profiles: select own" on profiles;
 create policy "profiles: select own" on profiles
   for select using (auth.uid() = id);
 
+drop policy if exists "profiles: insert own" on profiles;
 create policy "profiles: insert own" on profiles
   for insert with check (auth.uid() = id);
 
+drop policy if exists "profiles: update own" on profiles;
 create policy "profiles: update own" on profiles
   for update using (auth.uid() = id);
 
 -- Daily logs policies
+drop policy if exists "daily_logs: select own" on daily_logs;
 create policy "daily_logs: select own" on daily_logs
   for select using (auth.uid() = user_id);
 
+drop policy if exists "daily_logs: insert own" on daily_logs;
 create policy "daily_logs: insert own" on daily_logs
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "daily_logs: update own" on daily_logs;
 create policy "daily_logs: update own" on daily_logs
   for update using (auth.uid() = user_id);
 
 -- Achievements policies
+drop policy if exists "achievements: select own" on achievements;
 create policy "achievements: select own" on achievements
   for select using (auth.uid() = user_id);
 
+drop policy if exists "achievements: insert own" on achievements;
 create policy "achievements: insert own" on achievements
   for insert with check (auth.uid() = user_id);
 
 -- Quest completions policies
+drop policy if exists "quest_completions: select own" on quest_completions;
 create policy "quest_completions: select own" on quest_completions
   for select using (auth.uid() = user_id);
 
+drop policy if exists "quest_completions: insert own" on quest_completions;
 create policy "quest_completions: insert own" on quest_completions
   for insert with check (auth.uid() = user_id);
 
@@ -122,9 +132,7 @@ create trigger on_auth_user_created
 
 -- ─────────────────────────────────────────────
 -- BACKFILL: create profile rows for any existing
--- auth.users that never got one (e.g. sign-ups
--- that occurred before the trigger was added or
--- before RLS policies were applied).
+-- auth.users that never got one.
 -- ─────────────────────────────────────────────
 insert into public.profiles (id, total_xp, onboarding_complete)
 select id, 0, false

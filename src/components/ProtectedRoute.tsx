@@ -20,11 +20,14 @@ function ProfileErrorScreen() {
         <div className="text-4xl mb-4">⚠️</div>
         <p className="font-pixel text-red-400 text-xs mb-3">Profile unavailable</p>
         <p className="text-gray-400 text-sm mb-6">Could not load your profile data.</p>
-        <div className="flex gap-3 justify-center">
-          <button onClick={() => window.location.reload()} className="btn-primary">
+        <div className="flex flex-col gap-3 items-center">
+          <button onClick={() => window.location.reload()} className="btn-primary w-40">
             Retry
           </button>
-          <button onClick={() => supabase.auth.signOut()} className="btn-secondary">
+          <button onClick={() => window.location.href = '/onboarding'} className="btn-secondary w-40">
+            Complete Setup
+          </button>
+          <button onClick={() => supabase.auth.signOut()} className="text-gray-500 text-sm hover:text-gray-300 transition-colors">
             Sign Out
           </button>
         </div>
